@@ -5,3 +5,6 @@ repositories:
     pipeline_editor_s5:
         from: "https://github.com/sea-kg/pipeline-editor-s5"
         to: "todo"
+    fhq_server:
+        from: "https://github.com/freehackquest/fhq-server.git"
+        to: "todo"

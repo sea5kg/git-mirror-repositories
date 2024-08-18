@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 # Copyright (c) 2024 Evgenii Sopov <mrseakg@gmail.com>
 
+"""
+Script for mirroring git-repositories
+"""
+
 import os
 import sys
 import subprocess
@@ -35,11 +39,13 @@ if not os.path.isdir(WORK_DIR):
     sys.exit("Could not create " + WORK_DIR)
 print("Working directory", WORK_DIR)
 
-def run_command(self, _command, _output=None):
+
+def command_with_output(_command, print_to_console=True):
     """ run_command """
-    print("Run command: " + " ".join(_command))
-    if _output is not None:
-        _output.write("Run command: " + " ".join(_command) + "\n")
+    _ret = ""
+    _returncode = None
+    if print_to_console:
+        print("Run command: " + " ".join(_command))
     with subprocess.Popen(
         _command,
         stdout=subprocess.PIPE,
@@ -51,32 +57,39 @@ def run_command(self, _command, _output=None):
             _returncode = _proc.poll()
             _line = _proc.stdout.readline()
             if _line:
-                _line = _line.decode("utf-8").strip()
-                print(_line)
-                if _output is not None:
-                    _output.write(_line + "\n")
+                _line = _line.decode("utf-8")
+                _ret += _line
+                if print_to_console:
+                    print(_line.rstrip())
         while _line:
             _line = _proc.stdout.readline()
             if _line:
-                _line = _line.decode("utf-8").strip()
-                print(_line)
-                if _output is not None:
-                    _output.write(_line + "\n")
+                _line = _line.decode("utf-8")
+                _ret += _line
+                if print_to_console:
+                    print(_line.rstrip())
             else:
                 break
         if _returncode != 0:
-            print("ERROR: returncode " + str(_returncode))
-            if _output is not None:
-                _output.write("ERROR: returncode " + str(_returncode) + "\n")
-            sys.exit(_returncode)
-        return
-    sys.exit("Could not start process")
+            if print_to_console:
+                print("ERROR: returncode " + str(_returncode))
+    return _ret, _returncode
+
+
+def git_current_branch():
+    """ return current branch """
+    _output, _retcode = command_with_output(
+        ["git", "rev-parse", "--abbrev-ref", "HEAD"],
+        print_to_console=False
+    )
+    return _output.strip()
+
 
 if 'repositories' not in CONFIG:
     sys.exit("Not found 'repositories' in " + CONFIG_PATH_YML)
 
 for _repoid in CONFIG["repositories"]:
-    print("Start mirorring... ",_repoid)
+    print("Start mirorring... ", _repoid)
 
     _repo = CONFIG["repositories"][_repoid]
     _repository_dir = os.path.join(WORK_DIR, _repoid)
@@ -99,9 +112,52 @@ for _repoid in CONFIG["repositories"]:
         sys.exit("Problem with git pull " + _repository_dir)
 
     # TODO keep information about mirroring
-    _repository_mirroring_info_dir = os.path.join(WORK_DIR, _repoid + ".mirroring_debug_info")
+    _repository_info_dir = os.path.join(
+        WORK_DIR,
+        _repoid + ".mirroring_debug_info"
+    )
 
+    _output, _retcode = command_with_output(
+        ["git", "branch", "-a", "-v"],
+        print_to_console=False
+    )
 
+    _remotes_branches = []
+    _local_branches = []
+    _lines = _output.split("\n")
+    for _line in _lines:
+        _line = _line.strip()
+        if _line == "":
+            continue
+        if _line.startswith("remotes/origin/"):
+            _branch = _line.split(" ")[0]
+            _branch = _branch[len("remotes/origin/"):]
+            if _branch == "HEAD":
+                continue
+            _output, _retcode = command_with_output(
+                ["git", "branch", "-a", "-v"],
+                print_to_console=False
+            )
+            _remotes_branches.append(_branch)
+        elif _line.startswith("*"):
+            _current_branch = _line
+            _current_branch = _current_branch[1:].strip().split(" ")[0]
+            _local_branches.append(_current_branch)
+        else:
+            _local_branches.append(_line)
+
+    print("_current_branch", _current_branch)
+    print("_remotes_branches", _remotes_branches)
+    print("_local_branches", _local_branches)
+
+    for _branch in _remotes_branches:
+        if _branch != git_current_branch():
+            _ret = os.system("git checkout " + _branch)
+            print(_ret)
+        _ret = os.system("git reset --hard origin/" + _branch)
+        print(_ret)
+
+    # print(_output)
     # todo get list of branches and tags - remember
 
     print("Done with", _repoid)
