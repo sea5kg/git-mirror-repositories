@@ -1,0 +1,7 @@
+
+working_directory: "./repos"
+
+repositories:
+    pipeline_editor_s5:
+        from: "https://github.com/sea-kg/pipeline-editor-s5"
+        to: "todo"
