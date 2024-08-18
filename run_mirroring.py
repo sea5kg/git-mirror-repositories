@@ -3,6 +3,7 @@
 
 import os
 import sys
+import subprocess
 import yaml
 
 print("Start mirroring git-repositories...")
@@ -34,6 +35,43 @@ if not os.path.isdir(WORK_DIR):
     sys.exit("Could not create " + WORK_DIR)
 print("Working directory", WORK_DIR)
 
+def run_command(self, _command, _output=None):
+    """ run_command """
+    print("Run command: " + " ".join(_command))
+    if _output is not None:
+        _output.write("Run command: " + " ".join(_command) + "\n")
+    with subprocess.Popen(
+        _command,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        shell=False
+    ) as _proc:
+        _returncode = _proc.poll()
+        while _returncode is None:
+            _returncode = _proc.poll()
+            _line = _proc.stdout.readline()
+            if _line:
+                _line = _line.decode("utf-8").strip()
+                print(_line)
+                if _output is not None:
+                    _output.write(_line + "\n")
+        while _line:
+            _line = _proc.stdout.readline()
+            if _line:
+                _line = _line.decode("utf-8").strip()
+                print(_line)
+                if _output is not None:
+                    _output.write(_line + "\n")
+            else:
+                break
+        if _returncode != 0:
+            print("ERROR: returncode " + str(_returncode))
+            if _output is not None:
+                _output.write("ERROR: returncode " + str(_returncode) + "\n")
+            sys.exit(_returncode)
+        return
+    sys.exit("Could not start process")
+
 if 'repositories' not in CONFIG:
     sys.exit("Not found 'repositories' in " + CONFIG_PATH_YML)
 
@@ -60,8 +98,11 @@ for _repoid in CONFIG["repositories"]:
     if ret != 0:
         sys.exit("Problem with git pull " + _repository_dir)
 
+    # TODO keep information about mirroring
+    _repository_mirroring_info_dir = os.path.join(WORK_DIR, _repoid + ".mirroring_debug_info")
+
+
     # todo get list of branches and tags - remember
 
     print("Done with", _repoid)
     os.chdir(CURRENT_DIR)
-
