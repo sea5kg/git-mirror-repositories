@@ -117,7 +117,7 @@ class FolderSwitcher:
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
-        print("Switch to " + self.__prev)
+        # print("Switch to " + self.__prev)
         os.chdir(self.__prev)
 
 
