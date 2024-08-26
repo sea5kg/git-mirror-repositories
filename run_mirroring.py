@@ -16,7 +16,8 @@ print("""
 
 print(" * Start mirroring git-repositories...")
 
-CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+# CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+CURRENT_DIR = os.getcwd()
 CONFIG_PATH_YML = os.path.join(CURRENT_DIR, 'config.yml')
 CONFIG = None
 
