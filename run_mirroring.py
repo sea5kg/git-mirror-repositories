@@ -141,7 +141,20 @@ def git_pull(_repository_dir):
         )
         if _retcode != 0:
             sys.exit(
-                "\nFAILED: Problem with git pull " + _repository_dir +
+                "\nFAILED: Problem with 'git pull -p' " + _repository_dir +
+                "\nOutput: \n" + _output
+            )
+
+def git_fetch_origin(_repository_dir):
+    """ git pull -p """
+    with FolderSwitcher(_repository_dir) as _:
+        _output, _retcode = command_with_output(
+            ["git", "fetch", "origin"],
+            print_to_console=False
+        )
+        if _retcode != 0:
+            sys.exit(
+                "\nFAILED: Problem with 'git fetch origin' in " + _repository_dir +
                 "\nOutput: \n" + _output
             )
 
@@ -236,7 +249,7 @@ for _repoid in CONFIG["repositories"]:
     os.chdir(_repository_dir)
 
     git_remote_set_url_origin(_repository_dir, _repo["from"])
-    git_pull(_repository_dir)
+    git_fetch_origin(_repository_dir)
 
     # TODO keep information about mirroring
     _repository_info_dir = os.path.join(
