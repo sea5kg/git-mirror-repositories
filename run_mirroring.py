@@ -140,7 +140,10 @@ def git_pull(_repository_dir):
             print_to_console=False
         )
         if _retcode != 0:
-            sys.exit("\nFAILED: Problem with git pull " + _repository_dir)
+            sys.exit(
+                "\nFAILED: Problem with git pull " + _repository_dir +
+                "\nOutput: \n" + _output
+            )
 
 
 def git_remote_set_url_origin(_repository_dir, _url):
