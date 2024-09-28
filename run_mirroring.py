@@ -264,7 +264,7 @@ for _repoid in CONFIG["repositories"]:
     print(" -> Start mirorring repo:", _repoid)
     _repository_dir = os.path.join(WORK_DIR, _repoid)
     print("Cloning new repostiry... " + _repo["from"])
-    if not is_dir_with_repo():
+    if not is_dir_with_repo(_repository_dir):
         git_clone(_repo["from"], _repository_dir)
     os.chdir(_repository_dir)
 
