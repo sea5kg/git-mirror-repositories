@@ -145,6 +145,7 @@ def git_pull(_repository_dir):
                 "\nOutput: \n" + _output
             )
 
+
 def git_fetch_origin(_repository_dir):
     """ git pull -p """
     with FolderSwitcher(_repository_dir) as _:
@@ -154,7 +155,8 @@ def git_fetch_origin(_repository_dir):
         )
         if _retcode != 0:
             sys.exit(
-                "\nFAILED: Problem with 'git fetch origin' in " + _repository_dir +
+                "\nFAILED: Problem with 'git fetch origin'" +
+                " in " + _repository_dir +
                 "\nOutput: \n" + _output
             )
 
@@ -198,6 +200,26 @@ def git_push_force(_repository_dir, _):
             )
 
 
+def git_clone(repo_url, repo_dir):
+    """ git clone... """
+    if not os.path.isdir(repo_dir):
+        os.makedirs(repo_dir, exist_ok=True)
+        if not os.path.isdir(repo_dir):
+            sys.exit("\nFAILED: Could not creating " + repo_dir)
+
+    with FolderSwitcher(repo_dir) as _:
+        _output, _retcode = command_with_output(
+            ["git", "clone", repo_url, "."],
+            print_to_console=False
+        )
+        if _retcode != 0:
+            sys.exit(
+                "\nFAILED: Could not clone repository" +
+                " from " + repo_url + " to " + repo_dir + "\n"
+                "Output\n" + _output
+            )
+
+
 def git_switch_branch(_repository_dir, _branch):
     """ git checkout ... """
     with FolderSwitcher(_repository_dir) as _:
@@ -236,16 +258,8 @@ for _repoid in CONFIG["repositories"]:
 
     print(" -> Start mirorring repo:", _repoid)
     _repository_dir = os.path.join(WORK_DIR, _repoid)
-    if not os.path.isdir(_repository_dir):
-        os.makedirs(_repository_dir, exist_ok=True)
-        if not os.path.isdir(_repository_dir):
-            sys.exit("Could not creating " + _repository_dir)
-        os.chdir(WORK_DIR)
-        print("Cloning new repostiry")
-        ret = os.system("git clone " + _repo["from"] + " " + _repoid)
-        if ret != 0:
-            sys.exit("Could not cloning to " + _repository_dir)
-        os.chdir(CURRENT_DIR)
+    print("Cloning new repostiry... " + _repo["from"])
+    git_clone(_repo["from"], _repository_dir)
     os.chdir(_repository_dir)
 
     git_remote_set_url_origin(_repository_dir, _repo["from"])
