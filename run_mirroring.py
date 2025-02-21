@@ -202,7 +202,8 @@ def git_push_force(_repository_dir, _):
 
 def is_dir_with_repo(repo_dir):
     """ is_dir_with_repo """
-    return os.path.join(repo_dir, ".git")
+    _path = os.path.join(repo_dir, ".git")
+    return os.path.isdir(_path)
 
 
 def git_clone(repo_url, repo_dir):
@@ -263,8 +264,9 @@ for _repoid in CONFIG["repositories"]:
 
     print(" -> Start mirorring repo:", _repoid)
     _repository_dir = os.path.join(WORK_DIR, _repoid)
-    print("Cloning new repostiry... " + _repo["from"])
+    print("Cloning new repository... " + _repo["from"] + " to " + _repository_dir)
     if not is_dir_with_repo(_repository_dir):
+        print("DEBUG: git clone new repo")
         git_clone(_repo["from"], _repository_dir)
     os.chdir(_repository_dir)
 
